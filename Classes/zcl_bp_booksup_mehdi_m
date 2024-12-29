@@ -1,0 +1,54 @@
+CLASS zcl_bp_booksup_mehdi_m DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_travel_mehdi_m.
+ENDCLASS.
+
+
+
+CLASS ZCL_BP_BOOKSUP_MEHDI_M IMPLEMENTATION.
+ENDCLASS.
+
+
+CLASS lhc_zi_bookingsup_mehdi_m DEFINITION INHERITING FROM cl_abap_behavior_handler.
+
+  PRIVATE SECTION.
+
+    METHODS validateCurrencyCode FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_bookingsup_Mehdi_M~validateCurrencyCode.
+
+    METHODS validatePrice FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_bookingsup_Mehdi_M~validatePrice.
+
+    METHODS validateSupplement FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZI_bookingsup_Mehdi_M~validateSupplement.
+    METHODS calculateTotalPrice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR ZI_bookingsup_Mehdi_M~calculateTotalPrice.
+
+ENDCLASS.
+
+CLASS lhc_zi_bookingsup_mehdi_m IMPLEMENTATION.
+
+  METHOD validateCurrencyCode.
+  ENDMETHOD.
+
+  METHOD validatePrice.
+  ENDMETHOD.
+
+  METHOD validateSupplement.
+  ENDMETHOD.
+
+  METHOD calculateTotalPrice.
+
+    DATA lt_travel TYPE STANDARD TABLE OF ZI_travel_Mehdi_M WITH UNIQUE HASHED KEY key COMPONENTS TravelId.
+    lt_travel = CORRESPONDING #( keys DISCARDING DUPLICATES MAPPING TravelId = TravelId ).
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+        ENTITY ZI_travel_Mehdi_M
+        EXECUTE recalcTotPrice
+        FROM CORRESPONDING #( lt_travel ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+*"* use this source file for the definition and implementation of
+*"* local helper classes, interface definitions and type
+*"* declarations
