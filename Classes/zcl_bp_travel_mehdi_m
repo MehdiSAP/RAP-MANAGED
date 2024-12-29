@@ -1,0 +1,604 @@
+CLASS zcl_bp_travel_mehdi_m DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zi_travel_mehdi_m.
+ENDCLASS.
+
+
+
+CLASS ZCL_BP_TRAVEL_MEHDI_M IMPLEMENTATION.
+ENDCLASS.
+
+
+CLASS lsc_zi_travel_mehdi_m DEFINITION INHERITING FROM cl_abap_behavior_saver.
+
+  PROTECTED SECTION.
+
+    METHODS save_modified REDEFINITION.
+
+ENDCLASS.
+
+CLASS lsc_zi_travel_mehdi_m IMPLEMENTATION.
+
+
+
+  METHOD save_modified.
+
+    DATA lt_log TYPE STANDARD TABLE OF zlog_tra_mehdi_m.
+    DATA ls_log TYPE zlog_tra_mehdi_m.
+
+    GET TIME STAMP FIELD ls_log-created_at.
+
+    IF create-zi_travel_mehdi_m IS NOT INITIAL.
+      ls_log-changing_operation = 'CREATE'.
+      LOOP AT create-zi_travel_mehdi_m ASSIGNING FIELD-SYMBOL(<ls_travel>).
+        IF <ls_travel>-%control-BookingFee = cl_abap_behv=>flag_changed.
+          INSERT ls_log INTO TABLE lt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
+          TRY.
+              <ls_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH  cx_uuid_error.
+          ENDTRY.
+          <ls_log>-travelid = <ls_travel>-TravelId.
+          <ls_log>-changed_value = <ls_travel>-BookingFee.
+          <ls_log>-changed_field_name = 'BookingFee'.
+        ENDIF.
+
+        IF <ls_travel>-%control-OverallStatus = cl_abap_behv=>flag_changed.
+          INSERT ls_log INTO TABLE lt_log ASSIGNING <ls_log>.
+          TRY.
+              <ls_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH  cx_uuid_error.
+          ENDTRY.
+          <ls_log>-travelid = <ls_travel>-TravelId.
+          <ls_log>-changed_value = <ls_travel>-OverallStatus.
+          <ls_log>-changed_field_name = 'OverallStatus'.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDIF.
+
+    IF update-zi_travel_mehdi_m IS NOT INITIAL.
+      ls_log-changing_operation = 'UPDATE'.
+      LOOP AT update-zi_travel_mehdi_m ASSIGNING <ls_travel>.
+        IF <ls_travel>-%control-BookingFee = cl_abap_behv=>flag_changed.
+          INSERT ls_log INTO TABLE lt_log ASSIGNING <ls_log>.
+          TRY.
+              <ls_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH  cx_uuid_error.
+          ENDTRY.
+          <ls_log>-travelid = <ls_travel>-TravelId.
+          <ls_log>-changed_value = <ls_travel>-BookingFee.
+          <ls_log>-changed_field_name = 'BookingFee'.
+        ENDIF.
+
+        IF <ls_travel>-%control-OverallStatus = cl_abap_behv=>flag_changed.
+          INSERT ls_log INTO TABLE lt_log ASSIGNING <ls_log>.
+          TRY.
+              <ls_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+            CATCH  cx_uuid_error.
+          ENDTRY.
+          <ls_log>-travelid = <ls_travel>-TravelId.
+          <ls_log>-changed_value = <ls_travel>-OverallStatus.
+          <ls_log>-changed_field_name = 'OverallStatus'.
+        ENDIF.
+      ENDLOOP.
+
+    ENDIF.
+
+    IF delete-zi_travel_mehdi_m IS NOT INITIAL.
+      ls_log-changing_operation = 'DELETE'.
+      LOOP AT delete-zi_travel_mehdi_m ASSIGNING FIELD-SYMBOL(<ls_travel_del>).
+        INSERT ls_log INTO TABLE lt_log ASSIGNING <ls_log>.
+        TRY.
+            <ls_log>-change_id = cl_system_uuid=>create_uuid_x16_static( ).
+          CATCH  cx_uuid_error.
+        ENDTRY.
+        <ls_log>-travelid = <ls_travel_del>-TravelId.
+      ENDLOOP.
+    ENDIF.
+
+    INSERT zlog_tra_mehdi_m FROM TABLE @lt_log.
+
+**********************************************************************
+**********************************************************************
+
+    DATA: lt_book_suppl TYPE STANDARD TABLE OF zbooksup_mehdi_m.
+
+    IF create-zi_bookingsup_mehdi_m IS NOT INITIAL.
+      lt_book_suppl = VALUE #( FOR ls_booksup IN  create-zi_bookingsup_mehdi_m (
+                                           travel_id  = ls_booksup-TravelId
+                                           booking_id = ls_booksup-BookingId
+                                           booking_supplement_id  = ls_booksup-BookingSupplementId
+                                           supplement_id   = ls_booksup-SupplementId
+                                           price   = ls_booksup-Price
+                                           currency_code    = ls_booksup-CurrencyCode
+                                           last_changed_at = ls_booksup-LastChangedAt
+                                             )  ).
+      INSERT zbooksup_mehdi_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+    IF update-zi_bookingsup_mehdi_m IS NOT INITIAL.
+      lt_book_suppl = VALUE #( FOR ls_booksup IN  update-zi_bookingsup_mehdi_m (
+                                        travel_id  = ls_booksup-TravelId
+                                        booking_id = ls_booksup-BookingId
+                                        booking_supplement_id  = ls_booksup-BookingSupplementId
+                                        supplement_id   = ls_booksup-SupplementId
+                                        price   = ls_booksup-Price
+                                        currency_code    = ls_booksup-CurrencyCode
+                                        last_changed_at = ls_booksup-LastChangedAt
+                                          )  ).
+      UPDATE zbooksup_mehdi_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+    IF delete-zi_bookingsup_mehdi_m IS NOT INITIAL.
+      lt_book_suppl = VALUE #( FOR ls_del IN  delete-zi_bookingsup_mehdi_m (
+                                         travel_id  = ls_del-TravelId
+                                         booking_id = ls_del-BookingId
+                                         booking_supplement_id  = ls_del-BookingSupplementId
+                                           )  ).
+      DELETE zbooksup_mehdi_m FROM TABLE @lt_book_suppl.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lhc_ZI_travel_Mehdi_M DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR ZI_travel_Mehdi_M RESULT result.
+
+    METHODS accepttravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_mehdi_m~accepttravel RESULT result.
+
+    METHODS copytravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_mehdi_m~copytravel.
+
+    METHODS recalctotprice FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_mehdi_m~recalctotprice.
+
+    METHODS rejecttravel FOR MODIFY
+      IMPORTING keys FOR ACTION zi_travel_mehdi_m~rejecttravel RESULT result.
+    METHODS get_instance_features FOR INSTANCE FEATURES
+      IMPORTING keys REQUEST requested_features FOR zi_travel_mehdi_m RESULT result.
+    METHODS validatecustomer FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_mehdi_m~validatecustomer.
+    METHODS validatebokingfee FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_mehdi_m~validatebokingfee.
+
+    METHODS validatecurrencycode FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_mehdi_m~validatecurrencycode.
+
+    METHODS validatedates FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_mehdi_m~validatedates.
+
+    METHODS validatestatus FOR VALIDATE ON SAVE
+      IMPORTING keys FOR zi_travel_mehdi_m~validatestatus.
+    METHODS calculateTotalPrice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR zi_travel_mehdi_m~calculateTotalPrice.
+
+    METHODS earlynumbering_cba_booking FOR NUMBERING
+      IMPORTING entities FOR CREATE zi_travel_mehdi_m\_booking.
+
+    METHODS earlynumbering_create FOR NUMBERING
+      IMPORTING entities FOR CREATE zi_travel_mehdi_m.
+
+ENDCLASS.
+
+CLASS lhc_ZI_travel_Mehdi_M IMPLEMENTATION.
+
+  METHOD get_instance_authorizations.
+
+  ENDMETHOD.
+
+  METHOD earlynumbering_create.
+
+    DATA lv_count TYPE n LENGTH 20.
+
+    TRY.
+
+        LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entity>) WHERE TravelId IS INITIAL.
+          lv_count =  lv_count + 1 .
+        ENDLOOP.
+
+        cl_numberrange_runtime=>number_get(
+          EXPORTING
+
+            nr_range_nr       = '01'
+            object            = '/DMO/TRV_M'
+            quantity          = lv_count
+*    subobject         =
+*    toyear            =
+          IMPORTING
+            number            = DATA(lv_number)
+*    returncode        =
+    returned_quantity = DATA(lv_ret_count)
+        ).
+      CATCH cx_nr_object_not_found
+       cx_number_ranges INTO DATA(lo_x_check).
+        LOOP AT entities ASSIGNING <ls_entity> WHERE TravelId IS INITIAL.
+
+          INSERT VALUE #( %cid = <ls_entity>-%cid
+                          %key = <ls_entity>-%key ) INTO TABLE failed-zi_travel_mehdi_m.
+
+          INSERT VALUE #( %cid = <ls_entity>-%cid
+                          %key = <ls_entity>-%key
+                          %msg = lo_x_check
+                          ) INTO TABLE reported-zi_travel_mehdi_m.
+
+          RETURN.
+        ENDLOOP.
+    ENDTRY.
+
+    ASSERT lv_ret_count = lv_count.
+
+    lv_number = lv_number - lv_ret_count.
+
+    LOOP AT entities ASSIGNING <ls_entity> WHERE TravelId IS INITIAL.
+      lv_number = lv_number + 1.
+      INSERT VALUE #( %cid = <ls_entity>-%cid travelid = lv_number ) INTO TABLE mapped-zi_travel_mehdi_m.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD earlynumbering_cba_Booking.
+
+    DATA lv_max_booking  TYPE /dmo/booking_id.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+        ENTITY ZI_travel_Mehdi_M BY \_booking
+        FROM CORRESPONDING #( entities )
+        LINK DATA(lt_link_data).
+
+    LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_group_entity>) GROUP BY <ls_group_entity>-TravelId.
+
+      lv_max_booking = REDUCE #( INIT lv_max = CONV /dmo/booking_id( '0' )
+                                 FOR ls_link IN lt_link_data USING KEY entity
+                                 WHERE ( source-TravelId = <ls_group_entity>-TravelId )
+                                 NEXT lv_max = COND /dmo/booking_id( WHEN lv_max < ls_link-target-BookingId
+                                                                          THEN ls_link-target-BookingId
+                                                                          ELSE lv_max ) ).
+
+      lv_max_booking = REDUCE #( INIT lv_max = lv_max_booking
+                                  FOR ls_entity IN entities USING KEY entity
+                                  WHERE ( TravelId = <ls_group_entity>-TravelId )
+                                  FOR ls_booking IN ls_entity-%target
+                                  NEXT lv_max = COND /dmo/booking_id( WHEN lv_max < ls_booking-BookingId
+                                                                           THEN ls_booking-BookingId
+                                                                           ELSE lv_max ) ).
+
+      LOOP AT entities ASSIGNING FIELD-SYMBOL(<ls_entity>)
+                       USING KEY entity WHERE TravelId = <ls_group_entity>-TravelId.
+
+        LOOP AT <ls_entity>-%target ASSIGNING FIELD-SYMBOL(<ls_booking>).
+          APPEND CORRESPONDING #( <ls_booking> ) TO mapped-zi_booking_mehdi_m ASSIGNING FIELD-SYMBOL(<ls_new_mapped_booking>).
+
+          IF <ls_booking>-BookingId IS INITIAL.
+            lv_max_booking += 10.
+            <ls_new_mapped_booking>-BookingId = lv_max_booking.
+          ENDIF.
+        ENDLOOP.
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD acceptTravel.
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    UPDATE FIELDS ( OverallStatus )
+    WITH VALUE #( FOR ls_keys IN keys ( %tky = ls_keys-%tky
+                                        OverallStatus = 'A' ) )
+        REPORTED DATA(lt_travel).
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_result).
+
+    result = VALUE #( FOR ls_result IN lt_result ( %tky = ls_result-%tky
+                                                   %param = ls_result )  ).
+  ENDMETHOD.
+
+  METHOD copyTravel.
+
+    DATA lt_travel TYPE  TABLE FOR CREATE ZI_travel_Mehdi_M.
+    DATA lt_booking TYPE  TABLE FOR CREATE ZI_travel_Mehdi_M\_booking.
+    DATA lt_bookingsupp TYPE  TABLE FOR CREATE ZI_booking_Mehdi_M\_bookingsupp.
+
+    READ TABLE keys ASSIGNING FIELD-SYMBOL(<ls_key_without_cid>) WITH KEY %cid = space.
+    ASSERT <ls_key_without_cid> IS NOT ASSIGNED.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+        ENTITY ZI_travel_Mehdi_M ALL FIELDS WITH CORRESPONDING #( keys )
+        RESULT DATA(lt_travel_r)
+        FAILED DATA(lt_failed).
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+        ENTITY ZI_travel_Mehdi_M BY \_booking ALL FIELDS WITH CORRESPONDING #( lt_travel_r )
+        RESULT DATA(lt_booking_r).
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+        ENTITY ZI_booking_Mehdi_M BY \_bookingsupp ALL FIELDS WITH CORRESPONDING #( lt_booking_r )
+        RESULT DATA(lt_bookingsupp_r).
+
+    LOOP AT lt_travel_r ASSIGNING FIELD-SYMBOL(<ls_travel_r>).
+
+*    APPEND INITIAL LINE TO lt_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+*    <ls_travel>-%cid = keys[ key entity TravelId = <ls_travel>-TravelId ]-%cid.
+*    <ls_travel>-%data = CORRESPONDING #( <ls_travel_r>-%data  EXCEPT TravelId ).
+      APPEND VALUE #( %cid = keys[ KEY entity TravelId = <ls_travel_r>-TravelId ]-%cid
+                      %data = CORRESPONDING #( <ls_travel_r>-%data  EXCEPT TravelId ) )
+                      TO lt_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+
+      <ls_travel>-BeginDate = cl_abap_context_info=>get_system_date( ).
+      <ls_travel>-ENdDate = cl_abap_context_info=>get_system_date( ) + 30.
+      <ls_travel>-OverallStatus = 'O'.
+
+
+      APPEND VALUE #( %cid_ref = keys[ KEY entity TravelId = <ls_travel_r>-TravelId ]-%cid )
+                      TO lt_booking ASSIGNING FIELD-SYMBOL(<ls_booking>).
+
+      LOOP AT lt_booking_r ASSIGNING FIELD-SYMBOL(<ls_booking_r>) USING KEY entity WHERE TravelId = <ls_travel_r>-TravelId.
+
+        APPEND VALUE #( %cid = <ls_travel>-%cid && <ls_booking_r>-BookingId
+                        %data = CORRESPONDING #( <ls_booking_r>-%data  EXCEPT Travelid ) )
+                        TO <ls_booking>-%target ASSIGNING FIELD-SYMBOL(<ls_booking_n>).
+
+        <ls_booking_n>-BookingStatus = 'N'.
+
+        APPEND VALUE #( %cid_ref = <ls_booking_n>-%cid  )
+                        TO lt_bookingsupp ASSIGNING FIELD-SYMBOL(<ls_bookingsupp>).
+
+        LOOP AT lt_bookingsupp_r ASSIGNING FIELD-SYMBOL(<ls_bookingsupp_r>) USING KEY  entity
+                                WHERE  TravelId = <ls_travel_r>-TravelId AND
+                                       BookingId = <ls_booking_r>-BookingId.
+
+          APPEND VALUE #( %cid = <ls_travel>-%cid && <ls_booking_r>-BookingId && <ls_bookingsupp_r>-BookingSupplementId
+                          %data = CORRESPONDING #( <ls_bookingsupp_r>-%data  EXCEPT Travelid bookingid ) )
+                      TO <ls_bookingsupp>-%target.
+        ENDLOOP.
+      ENDLOOP.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    CREATE FIELDS ( AgencyId CustomerId BeginDate EndDate BookingFee TotalPrice CurrencyCode OverallStatus Description  )
+    WITH lt_travel
+    ENTITY ZI_travel_Mehdi_M
+    CREATE BY \_booking FIELDS ( BookingId BookingDate CustomerId CarrierId ConnectionId FlightDate FlightPrice CurrencyCode BookingStatus )
+    WITH lt_booking
+    ENTITY ZI_booking_Mehdi_M
+    CREATE BY \_bookingsupp FIELDS ( BookingSupplementId SupplementId Price CurrencyCode )
+    WITH lt_bookingsupp
+    MAPPED DATA(lt_mapped).
+
+    mapped-zi_travel_mehdi_m = lt_mapped-zi_travel_mehdi_m.
+
+
+  ENDMETHOD.
+
+  METHOD recalcTotPrice.
+
+    TYPES: BEGIN OF ty_travel,
+             price TYPE /dmo/total_price,
+             curr  TYPE /dmo/currency_code,
+           END OF ty_travel.
+    DATA lt_total TYPE TABLE OF ty_travel.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    FIELDS ( BookingFee CurrencyCode )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    DELETE lt_travel WHERE CurrencyCode IS INITIAL.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M BY \_booking
+    FIELDS ( FlightPrice CurrencyCode )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_ba_booking).
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_booking_Mehdi_M BY \_bookingsupp
+    FIELDS ( Price CurrencyCode )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_ba_booksuppl).
+
+    LOOP AT lt_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+
+      lt_total = VALUE #( ( price = <ls_travel>-BookingFee curr = <ls_travel>-CurrencyCode ) ).
+
+      LOOP AT lt_ba_booking ASSIGNING FIELD-SYMBOL(<ls_ba_booking>)
+                            USING KEY entity
+                            WHERE  TravelId = <ls_travel>-TravelId AND
+                                   CurrencyCode IS NOT INITIAL.
+        APPEND VALUE #( price = <ls_ba_booking>-FlightPrice curr = <ls_ba_booking>-CurrencyCode ) TO lt_total.
+
+        LOOP AT lt_ba_booksuppl ASSIGNING FIELD-SYMBOL(<ls_ba_booksuppl>)
+                                USING KEY entity
+                               WHERE TravelId   = <ls_ba_booking>-TravelId AND
+                                      BookingId = <ls_ba_booking>-BookingId AND
+                                      CurrencyCode IS NOT INITIAL.
+          APPEND VALUE #( price = <ls_ba_booksuppl>-Price curr = <ls_ba_booksuppl>-CurrencyCode ) TO lt_total.
+        ENDLOOP.
+      ENDLOOP.
+
+      LOOP AT lt_total ASSIGNING FIELD-SYMBOL(<ls_total>).
+
+        IF <ls_total>-curr NE <ls_travel>-CurrencyCode.
+          /dmo/cl_flight_amdp=>convert_currency(
+            EXPORTING
+              iv_amount               = <ls_total>-price
+              iv_currency_code_source =  <ls_total>-curr
+              iv_currency_code_target = <ls_travel>-CurrencyCode
+              iv_exchange_rate_date   = cl_abap_context_info=>get_system_date(  )
+            IMPORTING
+              ev_amount               = DATA(lv_price)
+          ).
+          <ls_travel>-TotalPrice += lv_price.
+        ELSE.
+          <ls_travel>-TotalPrice += <ls_total>-price.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    UPDATE FIELDS ( TotalPrice )
+    WITH CORRESPONDING #( lt_travel ).
+
+  ENDMETHOD.
+
+  METHOD rejectTravel.
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    UPDATE FIELDS ( OverallStatus )
+    WITH VALUE #( FOR ls_keys IN keys ( %tky = ls_keys-%tky
+                                        OverallStatus = 'X' ) )
+    REPORTED DATA(lt_travel).
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    ALL FIELDS WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_result).
+
+    result = VALUE #( FOR ls_result IN lt_result ( %tky = ls_result-%tky
+                                                   %param = ls_result )  ).
+
+  ENDMETHOD.
+
+  METHOD get_instance_features.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    FIELDS ( TravelId OverallStatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_result).
+
+    result = VALUE #( FOR ls_result IN lt_result
+                      ( %tky = ls_result-%tky
+                        %features-%action-acceptTravel = COND #( WHEN ls_result-OverallStatus = 'A'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+                        %features-%action-rejectTravel = COND #( WHEN ls_result-OverallStatus = 'X'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+                        %features-%assoc-_booking      = COND #( WHEN ls_result-OverallStatus = 'X'
+                                                                 THEN if_abap_behv=>fc-o-disabled
+                                                                 ELSE if_abap_behv=>fc-o-enabled )
+                                                                 ) ).
+
+  ENDMETHOD.
+
+  METHOD validateCustomer.
+
+    READ ENTITY IN LOCAL MODE ZI_travel_Mehdi_M
+    FIELDS ( CustomerId )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travel).
+
+    DATA lt_customer TYPE SORTED TABLE OF /dmo/customer WITH UNIQUE KEY customer_id.
+    lt_customer = CORRESPONDING #( lt_travel DISCARDING DUPLICATES MAPPING customer_id = CustomerId ).
+    DELETE lt_customer WHERE customer_id IS INITIAL.
+
+    IF lt_customer IS NOT INITIAL.
+      SELECT FROM /dmo/customer FIELDS customer_id
+      FOR ALL ENTRIES IN @lt_customer WHERE customer_id = @lt_customer-customer_id
+      INTO TABLE @DATA(lt_customer_db).
+    ENDIF.
+    LOOP AT lt_travel ASSIGNING FIELD-SYMBOL(<ls_travel>).
+
+      IF <ls_travel>-CustomerId IS INITIAL
+          OR NOT line_exists( lt_customer_db[ customer_id = <ls_travel>-CustomerId ] ).
+        APPEND VALUE #( %tky = <ls_travel>-%tky ) TO  failed-zi_travel_mehdi_m.
+        APPEND VALUE #( %tky = <ls_travel>-%tky %msg = NEW /dmo/cm_flight_messages(
+          textid                = /dmo/cm_flight_messages=>customer_unkown
+          customer_id           = <ls_travel>-CustomerId
+          severity              = if_abap_behv_message=>severity-error )
+        %element-customerid = if_abap_behv=>mk-on
+        ) TO  reported-zi_travel_mehdi_m.
+
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD validateBokingFee.
+  ENDMETHOD.
+
+  METHOD validateCurrencyCode.
+  ENDMETHOD.
+
+  METHOD validateDates.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M  IN LOCAL MODE
+        ENTITY ZI_travel_Mehdi_M
+        FIELDS ( BeginDate EndDate )
+        WITH CORRESPONDING #( keys )
+        RESULT DATA(lt_travels).
+
+    LOOP AT lt_travels ASSIGNING  FIELD-SYMBOL(<ls_travel>).
+      IF <ls_travel>-BeginDate > <ls_travel>-EndDate.
+        APPEND VALUE #( %tky = <ls_travel>-%tky ) TO failed-zi_travel_mehdi_m.
+        APPEND VALUE #( %tky = <ls_travel>-%tky
+                        %msg = NEW /dmo/cm_flight_messages(
+                                  textid                = /dmo/cm_flight_messages=>begin_date_bef_end_date
+                                  travel_id             = <ls_travel>-TravelId
+                                  begin_date            = <ls_travel>-BeginDate
+                                  end_date              = <ls_travel>-EndDate
+                                  severity              = if_abap_behv_message=>severity-error )
+                        %element-BeginDate = if_abap_behv=>mk-on
+                        %element-EndDate = if_abap_behv=>mk-on ) TO reported-zi_travel_mehdi_m.
+      ELSEIF <ls_travel>-BeginDate < cl_abap_context_info=>get_system_date( ).
+        APPEND VALUE #( %tky = <ls_travel>-%tky ) TO failed-zi_travel_mehdi_m.
+        APPEND VALUE #( %tky = <ls_travel>-%tky
+                        %msg = NEW /dmo/cm_flight_messages(
+                                  textid                = /dmo/cm_flight_messages=>begin_date_on_or_bef_sysdate
+                                  travel_id             = <ls_travel>-TravelId
+                                  begin_date            = <ls_travel>-BeginDate
+                                  severity              = if_abap_behv_message=>severity-error )
+                        %element-BeginDate = if_abap_behv=>mk-on ) TO reported-zi_travel_mehdi_m.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD validateStatus.
+
+    READ ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    FIELDS ( OverallStatus )
+    WITH CORRESPONDING #( keys )
+    RESULT DATA(lt_travels).
+
+    LOOP AT lt_travels ASSIGNING FIELD-SYMBOL(<ls_travel>).
+      CASE <ls_travel>-OverallStatus.
+        WHEN 'O'.
+        WHEN 'X'.
+        WHEN 'A'.
+        WHEN OTHERS.
+          APPEND VALUE #( %tky = <ls_travel>-%tky ) TO failed-zi_travel_mehdi_m.
+          APPEND VALUE #( %tky = <ls_travel>-%tky
+                          %msg = NEW /dmo/cm_flight_messages(
+                                    textid                = /dmo/cm_flight_messages=>status_invalid
+                                    travel_id             = <ls_travel>-TravelId
+                                    status                = <ls_travel>-OverallStatus
+                                    severity              = if_abap_behv_message=>severity-error )
+                          %element-OverallStatus = if_abap_behv=>mk-on ) TO reported-zi_travel_mehdi_m.
+      ENDCASE.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD calculateTotalPrice.
+
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M IN LOCAL MODE
+    ENTITY ZI_travel_Mehdi_M
+    EXECUTE recalcTotPrice
+    FROM CORRESPONDING #( keys ).
+
+  ENDMETHOD.
+
+ENDCLASS.
