@@ -1,0 +1,122 @@
+CLASS zcl_modify_practice_mehdi DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+
+    INTERFACES if_oo_adt_classrun.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS ZCL_MODIFY_PRACTICE_MEHDI IMPLEMENTATION.
+
+
+  METHOD if_oo_adt_classrun~main.
+
+* Fall1  Create operation:
+    IF 1 = 2.
+      MODIFY ENTITY ZI_travel_Mehdi_M
+      CREATE FROM VALUE #(
+                          ( %cid = 'Cid1'
+                          %data-BeginDate = '20241021'
+                          %control-BeginDate = if_abap_behv=>mk-on
+                          )
+                          )
+      CREATE BY \_booking FROM VALUE #(
+                                      ( %cid_ref = 'Cid1'
+                                        %target = VALUE #( ( %cid = 'Cid11'
+                                                           %data-BookingDate = '20241021'
+                                                           %control-BookingDate = if_abap_behv=>mk-on
+                                                          ) )
+                                      )
+                                      )
+      FAILED FINAL(lt_failed)
+      MAPPED FINAL(lt_mapped)
+      REPORTED FINAL(lt_result).
+
+      IF lt_failed IS NOT INITIAL.
+        out->write( lt_failed ).
+      ELSE.
+        COMMIT ENTITIES.
+      ENDIF.
+    ENDIF.
+
+* Fall 2: Delete Entity:
+    IF 1 = 2.
+      MODIFY ENTITY ZI_travel_Mehdi_M
+          DELETE FROM VALUE #( ( %key-TravelId = '00004398' ) )
+          FAILED FINAL(lt_failed1)
+          MAPPED FINAL(lt_mapped1)
+          REPORTED FINAL(lt_result1).
+
+      IF lt_failed1 IS NOT INITIAL.
+        out->write( lt_failed1 ).
+      ELSE.
+        COMMIT ENTITIES.
+      ENDIF.
+
+
+      MODIFY ENTITY ZI_booking_Mehdi_M
+        DELETE FROM VALUE #( ( %key-TravelId = '00004398' %key-BookingId = '00010' ) )
+        FAILED FINAL(lt_failed2)
+        MAPPED FINAL(lt_mapped2)
+        REPORTED FINAL(lt_result2).
+
+      IF lt_failed2 IS NOT INITIAL.
+        out->write( lt_failed2 ).
+      ELSE.
+        COMMIT ENTITIES.
+      ENDIF.
+
+    ENDIF.
+
+*  Falls 3: Create by association (Auto Fill CID)
+    IF 1 = 2.
+      MODIFY ENTITY ZI_travel_Mehdi_M
+          CREATE AUTO FILL CID WITH VALUE #(
+                                              (
+                                              %data-BeginDate = '20241021'
+                                              %control-BeginDate = if_abap_behv=>mk-on
+                                              )
+                                           )
+
+          FAILED FINAL(lt_failed3)
+          MAPPED FINAL(lt_mapped3)
+          REPORTED FINAL(lt_result3).
+
+      IF lt_failed3 IS NOT INITIAL.
+        out->write( lt_failed3 ).
+      ELSE.
+        COMMIT ENTITIES.
+      ENDIF.
+    ENDIF.
+
+*Fall4: Modify and delte Stetments in one Operation MODIFY ENTITIES
+if 1 = 2.
+    MODIFY ENTITIES OF ZI_travel_Mehdi_M
+        ENTITY ZI_travel_Mehdi_M
+    UPDATE FIELDS ( BeginDate )
+    WITH VALUE #( ( %key-TravelId = '00004400'
+                     %data-BeginDate = '20241023') )
+
+                     ENTITY ZI_travel_Mehdi_M
+                     DELETE FROM VALUE #( ( %key-TravelId = '00004401'  ) )
+            FAILED FINAL(lt_failed4)
+            MAPPED FINAL(lt_mapped4)
+            REPORTED FINAL(lt_result4).
+
+    IF lt_failed4 IS NOT INITIAL.
+      out->write( lt_failed4 ).
+    ELSE.
+      COMMIT ENTITIES.
+    ENDIF.
+endif.
+
+* Fall4:
+
+  ENDMETHOD.
+ENDCLASS.
