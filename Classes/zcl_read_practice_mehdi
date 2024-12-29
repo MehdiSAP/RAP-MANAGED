@@ -1,0 +1,215 @@
+CLASS zcl_read_practice_mehdi DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+
+CLASS ZCL_READ_PRACTICE_MEHDI IMPLEMENTATION.
+
+
+  METHOD if_oo_adt_classrun~main.
+
+*  Fall1 :
+
+    IF 1 = 2.
+      READ ENTITY ZI_travel_Mehdi_M
+      FROM VALUE #( ( %key-TravelId = '0000004211'
+                     %control = VALUE #(  AgencyId = if_abap_behv=>mk-on
+                                          CustomerId = if_abap_behv=>mk-on
+                                          BeginDate = if_abap_behv=>mk-on )
+                  ) )
+      RESULT DATA(lt_result_short1)
+      FAILED DATA(lt_failed_sort1).
+
+      IF lt_failed_sort1 IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( lt_result_short1 ).
+      ENDIF.
+    ENDIF.
+
+*   Fall2
+
+    IF 1 = 2.
+
+      READ ENTITY ZI_travel_Mehdi_M
+      FIELDS ( AgencyId CurrencyCode BeginDate )
+      WITH VALUE #( ( %key-TravelId = '0000004211' ) )
+          RESULT DATA(lt_result_short2)
+          FAILED DATA(lt_failed_sort2).
+
+      IF lt_failed_sort2 IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( lt_result_short2 ).
+      ENDIF.
+    ENDIF.
+
+*  Fall3
+
+    IF 1 = 2.
+
+      READ ENTITY ZI_travel_Mehdi_M
+      ALL FIELDS
+      WITH VALUE #(
+      ( %key-TravelId = '0000004211' )
+      ( %key-TravelId = '0000004271' )
+      )
+          RESULT DATA(lt_result_short3)
+          FAILED DATA(lt_failed_sort3).
+
+      IF lt_failed_sort3 IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( lt_result_short3 ).
+      ENDIF.
+    ENDIF.
+
+*  Fall4 with association
+
+    IF 1 = 2.
+
+      READ ENTITY ZI_travel_Mehdi_M
+      BY \_booking
+      ALL FIELDS
+      WITH VALUE #(
+      ( %key-TravelId = '0000004136' )
+      ( %key-TravelId = '0000004272' )
+      )
+          RESULT DATA(lt_result_short4)
+          FAILED DATA(lt_failed_sort4).
+
+      IF lt_failed_sort4 IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( lt_result_short4 ).
+      ENDIF.
+    ENDIF.
+
+* Fall 5: mehere Instanzen
+
+    IF 1 = 2.
+
+      out->write( '-------------' ).
+
+      READ ENTITIES OF ZI_travel_Mehdi_M
+
+      ENTITY     ZI_travel_Mehdi_M
+      ALL FIELDS
+      WITH VALUE #( ( %key-TravelId = '00004136' )
+                    ( %key-TravelId = '00004272' ) )
+      RESULT DATA(lt_result_short5_1)
+
+      ENTITY ZI_booking_Mehdi_M
+      ALL FIELDS
+      WITH VALUE #( ( %key-TravelId = '00004136'
+                      %key-BookingId = 0001 ) )
+      RESULT  DATA(lt_result_short5_2)
+      FAILED DATA(lt_failed_sort5).
+
+      IF lt_failed_sort5 IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( lt_result_short5_1 ).
+        out->write( lt_result_short5_2 ).
+      ENDIF.
+    ENDIF.
+
+
+* fALL 6: Dynamic
+    IF 1 = 0.
+      DATA : it_optab          TYPE abp_behv_retrievals_tab,
+             it_travel         TYPE TABLE FOR READ IMPORT ZI_travel_Mehdi_M,
+             it_travel_result  TYPE TABLE FOR READ RESULT  ZI_travel_Mehdi_M,
+             it_booking        TYPE TABLE FOR READ IMPORT ZI_travel_Mehdi_M\_booking,
+             it_booking_result TYPE TABLE FOR READ RESULT ZI_travel_Mehdi_M\_booking.
+
+
+      it_travel = VALUE #( ( %key-TravelId = '00004136'
+                          %control = VALUE #( AgencyId = if_abap_behv=>mk-on
+                                              CustomerId = if_abap_behv=>mk-on
+                                              BeginDate = if_abap_behv=>mk-on ) ) ).
+
+      it_booking = VALUE #( ( %key-TravelId = '00004136' "%key-BookingId = 0001
+                          %control = VALUE #( BookingId = if_abap_behv=>mk-on
+                                              CarrierId = if_abap_behv=>mk-on
+                                              BookingDate = if_abap_behv=>mk-on ) ) ).
+
+      it_optab = VALUE #( ( op = if_abap_behv=>op-r-read
+                            entity_name = 'ZI_TRAVEL_MEHDI_M'
+                            instances = REF #( it_travel )
+                            results = REF #( it_travel_result )  )
+                            ( op = if_abap_behv=>op-r-read_ba
+                            entity_name = 'ZI_TRAVEL_MEHDI_M'
+                            sub_name = '_BOOKING'
+                            instances = REF #( it_booking )
+                            results = REF #( it_booking_result ) )
+                          ).
+
+      READ ENTITIES OPERATIONS it_optab FAILED FINAL(lt_failed_dyn).
+
+      IF lt_failed_dyn IS NOT INITIAL.
+
+        out->write( 'Read Failed' ).
+
+      ELSE.
+        out->write( it_travel_result ).
+        out->write( it_booking_result ).
+      ENDIF.
+    ENDIF.
+
+
+
+*    TRY.
+*        DO.
+*          cl_numberrange_runtime=>number_get(
+*                    EXPORTING
+*
+*                      nr_range_nr       = '01'
+*                      object            = '/DMO/TRV_M'
+*                      quantity          = 1
+**    subobject         =
+**    toyear            =
+*                    IMPORTING
+*                      number            = DATA(lv_numer)
+**    returncode        =
+*              returned_quantity = DATA(lv_ret_count) ).
+*          READ ENTITY ZI_travel_Mehdi_M
+*              FROM VALUE #( ( %key-TravelId = lv_numer
+*                             %control = VALUE #(  AgencyId = if_abap_behv=>mk-on
+*                                                  CustomerId = if_abap_behv=>mk-on
+*                                                  BeginDate = if_abap_behv=>mk-on )
+*                          ) )
+*              RESULT DATA(lt_result_short8)
+*              FAILED DATA(lt_failed_sort8).
+*          IF lt_result_short8 IS INITIAL.
+*            EXIT.
+*          ENDIF.
+*        ENDDO.
+*      CATCH    cx_nr_object_not_found   cx_number_ranges .
+*
+*        EXIT.
+*    ENDTRY.
+
+
+  ENDMETHOD.
+ENDCLASS.
