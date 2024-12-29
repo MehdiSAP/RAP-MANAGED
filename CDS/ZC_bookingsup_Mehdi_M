@@ -1,0 +1,22 @@
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Booking Suppl Projection View'
+@Metadata.allowExtensions: true
+//@Metadata.ignorePropagatedAnnotations: true
+define view entity ZC_bookingsup_Mehdi_M
+  as projection on ZI_bookingsup_Mehdi_M
+{
+  key TravelId,
+  key BookingId,
+  key BookingSupplementId,
+      @ObjectModel.text.element: [ 'SupplementDescr' ]
+      SupplementId,
+      _supplementText.Description as SupplementDescr: localized,
+      Price,      
+      CurrencyCode,
+      LastChangedAt,
+      /* Associations */
+      _booking: redirected to parent ZC_booking_Mehdi_M,
+      _supplement,
+      _supplementText,
+      _travel: redirected to ZC_travel_Mehdi_M
+}
