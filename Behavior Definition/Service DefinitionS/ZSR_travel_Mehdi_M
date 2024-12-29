@@ -1,6 +1,0 @@
-@EndUserText.label: 'Service defination'
-define service ZSR_travel_Mehdi_M {
-  expose ZC_travel_Mehdi_M;
-  expose ZC_booking_Mehdi_M;
-  expose ZC_bookingsup_Mehdi_M;
-}

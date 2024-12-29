@@ -1,5 +1,0 @@
-@EndUserText.label: 'Approver'
-define service ZSR_travel_Approver_Mehdi_M {
-  expose ZC_travel_Mehdi_Approver_M;
-  expose ZC_booking_Mehdi_Approver_M;
-}
